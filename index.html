@@ -2,8 +2,85 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="🪐💧のプレイリスト(非公式)">
+    <meta name="twitter:description" content="天泣しるくさんのお歌をプレイリスト再生するサイトです。">
+    <meta name="twitter:url" content="https://tsurusube.com/">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪐💧のプレイリスト(非公式)</title>
+    <link rel="icon" href="image/favicon.ico">
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3"></script>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- 便利系 -->
+    <script type="text/javascript" src="app.js"></script>
 </head>
-<body>
-    まだナイよ～
+<body class="bg-gray-100">
+
+    <div id="app">
+
+        <!-- Navbar -->
+        <nav class="fixed top-0 left-0 w-full text-white shadow-lg z-50" style="background-color: #00334E;">
+            <div class="container mx-auto px-4 py-2 flex justify-between">
+                <h1 class="text-lg font-bold">🪐💧のプレイリスト(非公式)</h1>
+                <ul class="flex gap-4">
+                    <li><a href="jump.html" class="hover:underline"><img src="image/edit.svg" alt="Edit" /></a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <div class="pt-16 flex flex-col lg:flex-row min-h-screen">
+            <!-- Player and controls -->
+            <div class="w-full lg:w-2/3 p-2">
+                <div class="relative w-full h-0 pb-[56.25%] bg-gray-100">
+                    <div id="player"></div>
+                </div>                
+                <div class="flex justify-center items-center gap-0 p-0 bg-gray-100">
+                    <div>
+                        <div class="mt-2 text-center">
+                            <h2 class="text-lg font-bold">{{playing_title}}</h2>
+                            <p class="text-sm text-gray-600">{{playing_artist}}</p>
+                        </div>
+                        <div  class="mt-2 text-center">
+                            <button class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" @click="back"><img src="image/back.svg" alt="Back" /></button>
+                            <button id="start" class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" @click="play">
+                                <img :src="play_state ? 'image/pause.svg' : 'image/play.svg'" alt="Play/Pause" />
+                            </button>
+                            <button class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" @click="next"><img src="image/next.svg" alt="Next" /></button>
+                            <button class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" @click="shuffle"><img src="image/shuffle.svg" alt="Shuffle" /></button>
+                            <button
+                                class="p-2 rounded-full hover:bg-gray-400"
+                                :class="{'bg-gray-300': !loop_flag, 'bg-blue-400 text-white': loop_flag}"
+                                @click="loop"
+                            >
+                                <img src="image/loop.svg" alt="Loop" />
+                            </button>
+                            <span class="text-sm">{{playing_spend}} / {{playing_duration}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playlist -->
+            <div class="w-full lg:w-1/3 overflow-y-auto bg-white border-l" style="height: calc(100vh - 4rem);">
+                <div 
+                    v-for="(song, index) in playlist"
+                    :key="index"
+                    class="p-2 border-b cursor-pointer hover:bg-gray-100"
+                    :class="{'bg-blue-200': index === pointer}"
+                    @click="select(index)">
+                    <h3 class="text-sm font-bold">{{ song.title }}</h3>
+                    <p class="text-xs text-gray-500">{{ song.artist }}</p>
+                    <span class="text-xs text-gray-400">{{ song.duration }}</span>
+                </div>
+            </div>
+        </div>
+            
+    </div>
+
 </body>
 </html>
