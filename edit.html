@@ -2,8 +2,135 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <title>プレイリスト編集画面</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="image/favicon.ico">
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3"></script>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- 便利系 -->
+    <script type="text/javascript" src="edit.js"></script>
 </head>
-<body>
-    編集機能はまだナイよ～
+<body class="bg-gray-100">
+
+    <div id="edit">
+        <!-- Navbar -->
+        <nav class="fixed top-0 left-0 w-full text-white shadow-lg z-50" style="background-color: #00334E;">
+            <div class="container mx-auto px-4 py-2 flex justify-between">
+                <h1 class="text-lg font-bold">プレイリスト編集画面</h1>
+                <ul class="flex gap-4">
+                    <li><a href="https://github.com/kagasan/tsurusube.com/blob/main/playlist.csv" class="hover:underline">保存先</a></li>
+                    <li><a href="#" class="hover:underline" @click="generateCSV">csv確認</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Player Section -->
+        <div class="mt-16 p-4 flex gap-4">
+            <!-- Player Section -->
+            <div id="player" class="w-1/4 mb-4">
+                <!-- Player will dynamically resize to take available space -->
+            </div>
+        
+            <!-- Form Section -->
+            <div class="bg-white shadow-lg rounded-lg p-4 border w-3/4">
+                <!-- Title -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">タイトル</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].title">
+                    </div>
+                </div>
+
+                <!-- Artist -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">アーティスト</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].artist">
+                    </div>
+                </div>
+
+                <!-- URL -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">URL</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].url">
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">動画読込</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">1分戻す</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">10秒戻す</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">10秒進める</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">1分進める</button>
+                    </div>
+                </div>
+
+                <!-- Start Time -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">開始時刻</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].startsec">
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">今を設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">0を設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">この時間に移動</button>
+                    </div>
+                </div>
+
+                <!-- End Time -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">終了時刻</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].endsec">
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">今を設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">動画の終わりを設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded">この時間に移動</button>
+                    </div>
+                </div>
+
+                <!-- Hidden -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">非表示(1で非表示)</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].hidden" :class="{'bg-red-500': playlist[pointer].hidden == 1}">
+                        <button class="bg-green-500 text-white py-1 px-4 rounded">表示にする</button>
+                        <button class="bg-red-500 text-white py-1 px-4 rounded">非表示にする</button>
+                    </div>
+                </div>
+
+                <!-- Memo -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Memo</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].memo">
+                    </div>
+                </div>
+
+                <!-- Additional Actions -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded">下に項目を複製</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded">下に項目を作成</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded">上に項目を作成</button>
+                    <button class="bg-red-500 text-white py-1 px-4 rounded">項目を削除</button>
+                </div>
+            </div>
+
+        </div>
+        
+
+        <!-- Playlist Section -->
+        <div class="overflow-y-auto h-96">
+            <div 
+            v-for="(song, index) in playlist"
+            :key="index"
+            class="p-2 border-b cursor-pointer hover:bg-gray-200"
+            :class="{'bg-blue-300': index === pointer}"
+            @click="select(index)">
+            <h3 class="text-sm font-bold">{{ song.title }} / {{ song.artist }}</h3>
+            <p class="text-xs text-gray-500">{{ song.url }}</p>
+            <span class="text-xs text-gray-400">{{ song.startsec }} - {{ song.endsec }} {{song.hidden}} {{song.memo}}</span>
+            </div>
+        </div>
+
+    </div>
+
 </body>
 </html>
