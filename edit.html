@@ -138,7 +138,7 @@
             v-for="(song, index) in playlist"
             :key="index"
             class="p-2 border-b cursor-pointer hover:bg-gray-200"
-            :class="{'bg-blue-300': index === pointer, 'bg-gray-300': song.hidden == 1}"
+            :class="{'bg-blue-300': index === pointer, 'bg-gray-300': song.hidden == 1, 'bg-red-300': song.endsec == -1}"
             @click="select(index)">
             <h3 class="text-sm font-bold">{{index+1}} {{ song.title }} / {{ song.artist }}</h3>
             <p class="text-xs text-gray-500">{{ song.url }}</p>
