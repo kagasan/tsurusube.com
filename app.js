@@ -30,7 +30,7 @@ function formatDuration(seconds) {
 function formatURL(url) {
     // クエリパラメータのvを取り出す
     // ない場合はurlパスの空でない最後の部分を返す
-    const urlObj = new URL(url);
+    const response = await fetch(url, { cache: 'no-store' });
     const v = urlObj.searchParams.get('v');
     if (v) return v;
     const paths = urlObj.pathname.split('/').filter((s) => s);
