@@ -36,7 +36,16 @@
                 </div>
                 <!-- ちょっとしたメモ用のテキストエリア -->
                 <textarea class="border border-gray-300 rounded-lg p-2" v-model="memo"></textarea>
-                {{pointer+1}}番目の曲を編集中
+                {{pointer+1}}番目の曲を編集中<br>
+                <p>終了時刻を探す手順</p>
+                <ul class="list-disc pl-5">
+                    <li>再生を始める</li>
+                    <li><button class="bg-green-500 text-white py-1 px-4 rounded" @click="seek(60)">1分進める</button>を何回か押して終わりを通り過ぎる</li>
+                    <li><button class="bg-green-500 text-white py-1 px-4 rounded" @click="seek(-10)">10秒戻す</button>を何回か押して曲中に戻る</li>
+                    <li>終わりの<button class="bg-green-500 text-white py-1 px-4 rounded" @click="set_end_current">今を設定</button>を連打しながら曲の終わりを待つ</li>
+                    <li>曲が終わったら<button class="bg-green-500 text-white py-1 px-4 rounded" @click="check_end_sec">終わりを確認</button>で違和感がないか確認</li>
+                    <li><button class="bg-green-500 text-white py-1 px-4 rounded" @click="move_down">1つ下を選択</button>で次の曲に移動</li>
+                </ul>
             </div>
 
             <!-- Form Section -->
@@ -127,6 +136,7 @@
                     <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="move_bottom">1番下を選択</button>
                     <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="swap_down">1つ下と交換</button>
                     <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="swap_up">1つ上と交換</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="select_not_fix">終了時刻-1を探す</button>
                 </div>
             </div>
 

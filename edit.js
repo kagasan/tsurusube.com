@@ -277,6 +277,15 @@ window.onload = () => {
                     this.playlist[this.pointer + 1] = tmp;
                     this.pointer++;
                 }
+            },
+            select_not_fix() {
+                for (let i = 0; i < this.playlist.length; i++) {
+                    if (this.playlist[i].endsec + '' === '-1') {
+                        this.pointer = i;
+                        break;
+                    }
+                }
+                this.play();
             }
         }
 
