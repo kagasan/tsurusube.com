@@ -30,7 +30,7 @@ function formatDuration(seconds) {
 function formatURL(url) {
     // クエリパラメータのvを取り出す
     // ない場合はurlパスの空でない最後の部分を返す
-    const response = await fetch(url, { cache: 'no-store' });
+    const urlObj = new URL(url);
     const v = urlObj.searchParams.get('v');
     if (v) return v;
     const paths = urlObj.pathname.split('/').filter((s) => s);
@@ -40,7 +40,7 @@ function formatURL(url) {
 
 async function loadPlayList(url = "https://raw.githubusercontent.com/kagasan/tsurusube.com/refs/heads/main/playlist.csv") {
     // utf8のcsvを読み込み、dictの配列に変換して返す
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' });
     const text = await response.text();
     const rows = text.split("\n");
     const keys = rows[0].split(",");
