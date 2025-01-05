@@ -58,7 +58,7 @@ async function loadPlayList(url = "https://raw.githubusercontent.com/kagasan/tsu
         item.startsec = formatTime(values[3]);
         item.endsec = formatTime(values[4]);
         item.duration = formatDuration(item.endsec - item.startsec);
-        if(!(values[5].includes('1')))playlist.push(item);
+        if(!(values[5].includes('1')) && values[4] != '-1')playlist.push(item);
     }
     return playlist;
 }
