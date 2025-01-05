@@ -38,7 +38,7 @@ function formatURL(url) {
 
 async function loadPlayList(url = "https://raw.githubusercontent.com/kagasan/tsurusube.com/refs/heads/main/playlist.csv") {
     // utf8のcsvを読み込み、dictの配列に変換して返す
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' });
     const text = await response.text();
     const rows = text.split("\n");
     const keys = rows[0].split(",");
