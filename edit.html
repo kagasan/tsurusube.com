@@ -20,8 +20,8 @@
             <div class="container mx-auto px-4 py-2 flex justify-between">
                 <h1 class="text-lg font-bold">プレイリスト編集画面</h1>
                 <ul class="flex gap-4">
-                    <li><a href="https://github.com/kagasan/tsurusube.com/blob/main/playlist.csv" class="hover:underline">保存先</a></li>
-                    <li><a href="#" class="hover:underline" @click="generateCSV">csv確認</a></li>
+                    <li><a href="https://github.com/kagasan/tsurusube.com/blob/main/playlist.csv" class="hover:underline">保存先確認</a></li>
+                    <li><a href="#" class="hover:underline" @click="generateCSV">更新後csv確認</a></li>
                 </ul>
             </div>
         </nav>
@@ -29,12 +29,17 @@
         <!-- Player Section -->
         <div class="mt-16 p-4 flex gap-4">
             <!-- Player Section -->
-            <div id="player" class="w-1/4 mb-4">
+             <div class="w-2/5 mb-4">
                 <!-- Player will dynamically resize to take available space -->
+                <div id="player">
+                    <!-- Player will dynamically resize to take available space -->
+                </div>
+                <!-- ちょっとしたメモ用のテキストエリア -->
+                <textarea class="border border-gray-300 rounded-lg p-2" v-model="memo"></textarea>
             </div>
-        
+
             <!-- Form Section -->
-            <div class="bg-white shadow-lg rounded-lg p-4 border w-3/4">
+            <div class="bg-white shadow-lg rounded-lg p-4 border w-3/5">
                 <!-- Title -->
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-1">タイトル</label>
@@ -56,12 +61,15 @@
                     <label class="block text-gray-700 text-sm font-bold mb-1">URL</label>
                     <div class="flex gap-x-2">
                         <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].url">
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">動画読込</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">1分戻す</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">10秒戻す</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">10秒進める</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">1分進める</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="load_url">動画読込</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="seek(-60)">1分戻す</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="seek(-10)">10秒戻す</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="seek(10)">10秒進める</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="seek(60)">1分進める</button>
                     </div>
+                    <!-- <div class="flex gap-x-2">
+                        URLが変更されたら自動で読み込む: <input type="checkbox" v-model="auto_load">
+                    </div> -->
                 </div>
 
                 <!-- Start Time -->
@@ -69,9 +77,10 @@
                     <label class="block text-gray-700 text-sm font-bold mb-1">開始時刻</label>
                     <div class="flex gap-x-2">
                         <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].startsec">
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">今を設定</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">0を設定</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">この時間に移動</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="set_start_current">今を設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="set_start_0">0を設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="seek_start_sec">この時間に移動</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="check_start_sec">入りを確認</button>
                     </div>
                 </div>
 
@@ -79,10 +88,11 @@
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-1">終了時刻</label>
                     <div class="flex gap-x-2">
-                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].endsec">
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">今を設定</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">動画の終わりを設定</button>
-                        <button class="bg-blue-500 text-white py-1 px-4 rounded">この時間に移動</button>
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].endsec" :class="{'bg-red-500': playlist[pointer].endsec == '-1'}">
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="set_end_current">今を設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="set_end_last">動画の終わりを設定</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="seek_end_sec">この時間に移動</button>
+                        <button class="bg-blue-500 text-white py-1 px-4 rounded" @click="check_end_sec">終わりを確認</button>
                     </div>
                 </div>
 
@@ -91,8 +101,8 @@
                     <label class="block text-gray-700 text-sm font-bold mb-1">非表示(1で非表示)</label>
                     <div class="flex gap-x-2">
                         <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].hidden" :class="{'bg-red-500': playlist[pointer].hidden == 1}">
-                        <button class="bg-green-500 text-white py-1 px-4 rounded">表示にする</button>
-                        <button class="bg-red-500 text-white py-1 px-4 rounded">非表示にする</button>
+                        <button class="bg-green-500 text-white py-1 px-4 rounded" @click="change_to_visible">表示にする</button>
+                        <button class="bg-red-500 text-white py-1 px-4 rounded" @click="change_to_hidden">非表示にする</button>
                     </div>
                 </div>
 
@@ -106,10 +116,16 @@
 
                 <!-- Additional Actions -->
                 <div class="grid grid-cols-4 gap-2">
-                    <button class="bg-gray-500 text-white py-1 px-4 rounded">下に項目を複製</button>
-                    <button class="bg-gray-500 text-white py-1 px-4 rounded">下に項目を作成</button>
-                    <button class="bg-gray-500 text-white py-1 px-4 rounded">上に項目を作成</button>
-                    <button class="bg-red-500 text-white py-1 px-4 rounded">項目を削除</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="copy_to_below">下に項目を複製</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="new_to_below">下に項目を作成</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="new_to_above">上に項目を作成</button>
+                    <button class="bg-red-500 text-white py-1 px-4 rounded" @click="delete_item">項目を削除</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="move_top">1番上を選択</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="move_up">1つ上を選択</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="move_down">1つ下を選択</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="move_bottom">1番下を選択</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="swap_down">1つ下と交換</button>
+                    <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="swap_up">1つ上と交換</button>
                 </div>
             </div>
 
@@ -122,11 +138,11 @@
             v-for="(song, index) in playlist"
             :key="index"
             class="p-2 border-b cursor-pointer hover:bg-gray-200"
-            :class="{'bg-blue-300': index === pointer}"
+            :class="{'bg-blue-300': index === pointer, 'bg-gray-300': song.hidden == 1}"
             @click="select(index)">
             <h3 class="text-sm font-bold">{{ song.title }} / {{ song.artist }}</h3>
             <p class="text-xs text-gray-500">{{ song.url }}</p>
-            <span class="text-xs text-gray-400">{{ song.startsec }} - {{ song.endsec }} {{song.hidden}} {{song.memo}}</span>
+            <span class="text-xs text-gray-400">{{ song.startsec }} - {{ song.endsec }} {{song.memo}}</span>
             </div>
         </div>
 

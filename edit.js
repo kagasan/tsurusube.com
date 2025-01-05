@@ -4,7 +4,7 @@ function formatTime(str_time) {
     // からの場合は0を返す
     if (!str_time) return 0;
 
-    str_time = str_time.trim();
+    str_time = (str_time + '').trim();
 
     if (str_time.includes('-')) return 24 * 60 * 60;
 
@@ -96,6 +96,7 @@ window.onload = () => {
                 }],
                 pointer: 0,
                 play_state: false,
+                auto_load: false,
             };
         },
         async created() {
@@ -135,9 +136,9 @@ window.onload = () => {
                             item.title.replace(/,/g, '，').trim(),
                             item.artist.replace(/,/g, '，').trim(),
                             item.url.replace(/,/g, '，').trim(),
-                            item.startsec.replace(/,/g, '，').trim(),
-                            item.endsec.replace(/,/g, '，').trim(),
-                            item.hidden.replace(/,/g, '，').trim(),
+                            (item.startsec + '').replace(/,/g, '，').trim(),
+                            (item.endsec + '').replace(/,/g, '，').trim(),
+                            (item.hidden + '').replace(/,/g, '，').trim(),
                             item.memo.replace(/,/g, '，').trim(),
                         ];
                         rows.push(row.join(','));
@@ -147,7 +148,135 @@ window.onload = () => {
                     const url = URL.createObjectURL(blob);
                     window.open(url);
                 });
-                
+            },
+            load_url() {
+                this.play();
+            },
+            seek(add=0) {
+                yt_player.seekTo(yt_player.getCurrentTime() + add);
+            },
+            set_start_current() {
+                this.playlist[this.pointer].startsec = Math.ceil(yt_player.getCurrentTime());
+            },
+            set_start_0() {
+                this.playlist[this.pointer].startsec = 0;
+            },
+            seek_start_sec() {
+                yt_player.seekTo(formatTime(this.playlist[this.pointer].startsec));
+            },
+            check_start_sec() {
+                // 現在の再生を停止
+                yt_player.stopVideo();
+                // 2秒後にstartsecから再生開始
+                setTimeout(() => {
+                    yt_player.loadVideoById({
+                        'videoId': formatURL(this.playlist[this.pointer].url),
+                        'startSeconds': formatTime(this.playlist[this.pointer].startsec),
+                        'endSeconds': 24*60*60,
+                        'suggestedQuality': 'default'
+                    });
+                }, 2000);
+            },
+            set_end_current() {
+                this.playlist[this.pointer].endsec = Math.ceil(yt_player.getCurrentTime());
+            },
+            set_end_last() {
+                this.playlist[this.pointer].endsec = Math.ceil(yt_player.getDuration());
+            },
+            seek_end_sec() {
+                yt_player.seekTo(formatTime(this.playlist[this.pointer].endsec));
+            },
+            check_end_sec() {
+                // endsecの2秒前から再生を初めて、endsecで停止
+                yt_player.loadVideoById({
+                    'videoId': formatURL(this.playlist[this.pointer].url),
+                    'startSeconds': formatTime(this.playlist[this.pointer].endsec) - 2,
+                    'endSeconds': formatTime(this.playlist[this.pointer].endsec),
+                    'suggestedQuality': 'default'
+                });
+            },
+            change_to_visible() {
+                this.playlist[this.pointer].hidden = 0;
+            },
+            change_to_hidden() {
+                this.playlist[this.pointer].hidden = 1;
+            },
+            copy_to_below() {
+                this.playlist.splict(this.pointer + 1, 0, {
+                    title: this.playlist[this.pointer].title,
+                    artist: this.playlist[this.pointer].artist,
+                    url: this.playlist[this.pointer].url,
+                    startsec: this.playlist[this.pointer].startsec,
+                    endsec: this.playlist[this.pointer].endsec,
+                    hidden: this.playlist[this.pointer].hidden,
+                    memo: this.playlist[this.pointer].memo,
+                });
+                this.pointer++;
+                this.play();
+            },
+            new_to_below() {
+                this.playlist.splice(this.pointer + 1, 0, {
+                    title: "",
+                    artist: "",
+                    url: "",
+                    startsec: 0,
+                    endsec: -1,
+                    hidden: 0,
+                    memo: "",
+                });
+                this.pointer++;
+                this.play();
+            },
+            new_to_above() {
+                this.playlist.splice(this.pointer, 0, {
+                    title: "",
+                    artist: "",
+                    url: "",
+                    startsec: 0,
+                    endsec: -1,
+                    hidden: 0,
+                    memo: "",
+                });
+                this.play();
+            },
+            delete_item() {
+                if (this.playlist.length === 1) return;
+                const target_pointer = this.pointer;
+                if(this.pointer > 0) this.pointer--;
+                this.playlist.splice(target_pointer, 1);
+                this.play();
+            },
+            move_top() {
+                this.pointer = 0;
+                this.play();
+            },
+            move_up() {
+                if (this.pointer > 0) this.pointer--;
+                this.play();
+            },
+            move_down() {
+                if (this.pointer < this.playlist.length - 1) this.pointer++;
+                this.play();
+            },
+            move_bottom() {
+                this.pointer = this.playlist.length - 1;
+                this.play();
+            },
+            swap_up(){
+                if (this.pointer > 0) {
+                    const tmp = this.playlist[this.pointer];
+                    this.playlist[this.pointer] = this.playlist[this.pointer - 1];
+                    this.playlist[this.pointer - 1] = tmp;
+                    this.pointer--;
+                }
+            },
+            swap_down() {
+                if (this.pointer < this.playlist.length - 1) {
+                    const tmp = this.playlist[this.pointer];
+                    this.playlist[this.pointer] = this.playlist[this.pointer + 1];
+                    this.playlist[this.pointer + 1] = tmp;
+                    this.pointer++;
+                }
             }
         }
 
