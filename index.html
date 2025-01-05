@@ -73,7 +73,7 @@
                     class="p-2 border-b cursor-pointer hover:bg-gray-100"
                     :class="{'bg-blue-200': index === pointer}"
                     @click="select(index)">
-                    <h3 class="text-sm font-bold">{{ song.title }}</h3>
+                    <h3 class="text-sm font-bold">{{index + 1}} {{ song.title }}</h3>
                     <p class="text-xs text-gray-500">{{ song.artist }}</p>
                     <span class="text-xs text-gray-400">{{ song.duration }}</span>
                 </div>
