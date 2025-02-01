@@ -57,6 +57,7 @@ async function loadPlayList(url = "https://raw.githubusercontent.com/kagasan/tsu
         item.endsec = values[4];
         item.hidden = values[5].trim();
         item.memo = values[6].trim();
+        item.upload_date = values[7].trim();
         playlist.push(item);
     }
     return playlist;
@@ -93,6 +94,7 @@ window.onload = () => {
                     endsec: 0,
                     hidden: 0,
                     memo: "",
+                    upload_date: "",
                 }],
                 pointer: 0,
                 play_state: false,
@@ -140,6 +142,7 @@ window.onload = () => {
                             (item.endsec + '').replace(/,/g, '，').trim(),
                             (item.hidden + '').replace(/,/g, '，').trim(),
                             item.memo.replace(/,/g, '，').trim(),
+                            item.upload_date.replace(/,/g, '，').trim(),
                         ];
                         rows.push(row.join(','));
                     });
@@ -210,6 +213,7 @@ window.onload = () => {
                     endsec: this.playlist[this.pointer].endsec,
                     hidden: this.playlist[this.pointer].hidden,
                     memo: this.playlist[this.pointer].memo,
+                    upload_date: this.playlist[this.pointer].upload_date,
                 });
                 this.pointer++;
                 this.play();
@@ -223,6 +227,7 @@ window.onload = () => {
                     endsec: -1,
                     hidden: 0,
                     memo: "",
+                    upload_date: "",
                 });
                 this.pointer++;
                 this.play();
@@ -236,6 +241,7 @@ window.onload = () => {
                     endsec: -1,
                     hidden: 0,
                     memo: "",
+                    upload_date: "",
                 });
                 this.play();
             },
