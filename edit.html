@@ -124,6 +124,15 @@
                     </div>
                 </div>
 
+                <!-- Memo -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">yyyy/mm/dd</label>
+                    <div class="flex gap-x-2">
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].upload_date">
+                    </div>
+                </div>
+
+
                 <!-- Additional Actions -->
                 <div class="grid grid-cols-4 gap-2">
                     <button class="bg-gray-500 text-white py-1 px-4 rounded" @click="copy_to_below">下に項目を複製</button>
