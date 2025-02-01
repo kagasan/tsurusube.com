@@ -37,6 +37,33 @@ function formatURL(url) {
     return paths[paths.length - 1];
 }
 
+// cookieにbookmark情報を追加(引数は文字列)
+function addBookmark(id) {
+    const bookmarks = getBookmarks();
+    if (!bookmarks.includes(id)) {
+        bookmarks.push(id);
+        document.cookie = `bookmarks=${bookmarks.join(',')}`;
+    }
+}
+
+// cookieからbookmark情報を削除(引数は文字列)
+function removeBookmark(id) {
+    const bookmarks = getBookmarks();
+    const index = bookmarks.indexOf(id);
+    if (index >= 0) {
+        bookmarks.splice(index, 1);
+        document.cookie = `bookmarks=${bookmarks.join(',')}`;
+    }
+}
+
+// cokkieに保存されているbookmark情報を取得(文字列の配列)
+function getBookmarks() {
+    const cookies = document.cookie.split(';').map((s) => s.trim());
+    const cookie = cookies.find((s) => s.startsWith('bookmarks='));
+    if (!cookie) return [];
+    return cookie.substring(10).split(',');
+}
+
 
 async function loadPlayList(url = "https://raw.githubusercontent.com/kagasan/tsurusube.com/refs/heads/main/playlist.csv") {
     // utf8のcsvを読み込み、dictの配列に変換して返す
@@ -45,6 +72,7 @@ async function loadPlayList(url = "https://raw.githubusercontent.com/kagasan/tsu
     const rows = text.split("\n");
     const keys = rows[0].split(",");
     const playlist = [];
+    const bookmarks = getBookmarks();
     for (let i = 1; i < rows.length; i++) {
         const values = rows[i].split(",");
         if (values.length !== keys.length) {
@@ -58,6 +86,15 @@ async function loadPlayList(url = "https://raw.githubusercontent.com/kagasan/tsu
         item.startsec = formatTime(values[3]);
         item.endsec = formatTime(values[4]);
         item.duration = formatDuration(item.endsec - item.startsec);
+        item.yyyy_mm_dd = values[7].trim();
+        item.tags = ['all', item.yyyy_mm_dd.slice(0, 4)];
+        item.bookmarked = 0;
+        if (bookmarks.includes(item.id + "@" + item.startsec)) {
+            item.bookmarked = 1;
+            // console.log('ブックマークされている:', item.title, item.id + item.startsec);
+        } else {
+            // console.log('ブックマークされていない:', item.title, item.id + item.startsec);
+        }
         if(!(values[5].includes('1')) && values[4] != '-1')playlist.push(item);
     }
     return playlist;
@@ -103,16 +140,36 @@ window.onload = () => {
                 playing_duration: "00:00:00",
                 playing_spend: "00:00:00",
                 playlist: [],
+                originalPlaylist: [],
                 pointer: 0,
                 loop_flag: false,
                 play_state: false,
+                tags: ['bookmark'],
+                show_category_list: false,
             };
+        },
+        mounted() {
+            // クリック時にメニュー外だったら閉じる処理を登録
+            document.addEventListener('click', this.handleClickOutside);
+        },
+        unmounted() {
+            // イベントリスナーを解除
+            document.removeEventListener('click', this.handleClickOutside);
         },
         async created() {
             try {
                 // プレイリストを取得
                 const items = await loadPlayList();
-                this.playlist = items;
+                this.originalPlaylist = items;
+                this.playlist = [...items];
+
+                // itemsのtagsを取り出してthis.tagsに追加して、this.tagsを重複を削除してソート
+                for (const item of items) {
+                    for (const tag of item.tags) {
+                        if (!this.tags.includes(tag)) this.tags.push(tag);
+                    }
+                }
+                this.tags = this.tags.sort();
 
                 console.log('プレイリストを読み込みました:', this.playlist);
 
@@ -185,7 +242,99 @@ window.onload = () => {
                 // console.log('select_song', index);
                 this.pointer = index;
                 this.play(true);
-            }
+            },
+
+
+            toggle_category_list() {
+                // カテゴリリストの表示・非表示
+                this.show_category_list = !this.show_category_list;
+            },
+
+            handleClickOutside(event) {
+                // メニューが表示されていなければ何もしない
+                if (!this.show_category_list) return;
+          
+                // クリック先がカテゴリボタンあるいはカテゴリメニューを含まないなら閉じる
+                const buttonEl = this.$refs.categoryButton;
+                const menuEl = this.$refs.categoryMenu;
+          
+                // DOM要素がなければ処理を中断（念のため）
+                if (!buttonEl || !menuEl) return;
+          
+                // contains() で「クリック先がその要素内かどうか」を判定
+                if (
+                  !buttonEl.contains(event.target) &&
+                  !menuEl.contains(event.target)
+                ) {
+                  this.show_category_list = false;
+                }
+              },
+
+            category_select(tag) {
+                // ユーザーがカテゴリを選択したときの処理
+                // item.tagsにtagが含まれているitemのみを表示
+                // 一致するものがない場合は全てのitemを表示
+                this.show_category_list = false;
+
+                // 該当するitemの数を数えて、0なら全てのitemを表示
+                let count = 0;
+                for (const item of this.originalPlaylist) {
+                    if (tag === 'bookmark' && item.bookmarked === 1) count++;
+                    else if (item.tags.includes(tag)) count++;
+                }
+                if (count === 0) tag = 'all';
+                
+                const new_playlist = [];
+                for (const item of this.originalPlaylist) {
+                    if (tag === 'bookmark' && item.bookmarked === 1) new_playlist.push(item);
+                    else if (item.tags.includes(tag)) new_playlist.push(item);
+                }
+                this.playlist = new_playlist;
+                this.pointer = 0;
+                this.play(true);
+            },
+
+            toggle_bookmark_for_item(index=-1) {
+                if (typeof index !== 'number') index = -1;
+                if (index === -1) index = this.pointer;
+                // クリックされた曲
+                const item = this.playlist[index];
+            
+                // bookmark解除
+                if (item.bookmarked === 1) {
+                  item.bookmarked = 0;
+                  removeBookmark(item.id + "@" + item.startsec);
+                  // この曲の tags 配列から 'bookmark' を外しておく
+                  item.tags = item.tags.filter((tag) => tag !== 'bookmark');
+                } 
+                // bookmark追加
+                else {
+                  item.bookmarked = 1;
+                  addBookmark(item.id + "@" + item.startsec);
+                  // この曲の tags 配列に 'bookmark' を追加（重複チェックもお好みで）
+                  if (!item.tags.includes('bookmark')) {
+                    item.tags.push('bookmark');
+                  }
+                }
+            
+                // originalPlaylist のほうも更新しておかないと
+                // カテゴリ切替などでリストが作り直されたときに情報が消えてしまうので
+                const originalItem = this.originalPlaylist.find(
+                  (orig) => orig.id === item.id && orig.startsec === item.startsec
+                );
+                if (originalItem) {
+                  // 同様に反映
+                  originalItem.bookmarked = item.bookmarked;
+            
+                  if (item.bookmarked === 1) {
+                    if (!originalItem.tags.includes('bookmark')) {
+                      originalItem.tags.push('bookmark');
+                    }
+                  } else {
+                    originalItem.tags = originalItem.tags.filter((tag) => tag !== 'bookmark');
+                  }
+                }
+              },
         }
     });
 

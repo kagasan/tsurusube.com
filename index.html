@@ -45,6 +45,9 @@
                             <h2 class="text-lg font-bold">{{playing_title}}</h2>
                             <p class="text-sm text-gray-600">{{playing_artist}}</p>
                         </div>
+                        <div class="text-center mt-2">
+                            <span class="text-sm">{{playing_spend}} / {{playing_duration}}</span>
+                        </div>
                         <div  class="mt-2 text-center">
                             <button class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" @click="back"><img src="image/back.svg" alt="Back" /></button>
                             <button id="start" class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" @click="play">
@@ -59,7 +62,37 @@
                             >
                                 <img src="image/loop.svg" alt="Loop" />
                             </button>
-                            <span class="text-sm">{{playing_spend}} / {{playing_duration}}</span>
+                            <button v-if="playlist.length > 0" id="bookmark" class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" @click="toggle_bookmark_for_item">
+                                <img :src="playlist[pointer].bookmarked == 1 ? 'image/bookmark_remove_00334e.svg' : 'image/bookmark_add.svg'" alt="Add/Remove" />
+                            </button>
+                            <div class="relative inline-block mt-2">
+                                <!-- index.html のカテゴリボタン付近を ref 付きに修正し、@click を修正 -->
+                                <button 
+                                    ref="categoryButton"
+                                    class="p-2 bg-gray-300 rounded-full hover:bg-gray-400" 
+                                    @click.stop="toggle_category_list"
+                                >
+                                    <img src="image/category.svg" alt="Category" />
+                                </button>
+
+                                <!-- カテゴリメニュー部分にも ref をつける -->
+                                <div 
+                                    ref="categoryMenu"
+                                    v-if="show_category_list"
+                                    class="absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 w-32"
+                                >
+                                    <div class="flex flex-col">
+                                        <button
+                                            v-for="tag in tags"
+                                            :key="tag"
+                                            class="px-2 py-1 text-left hover:bg-gray-200"
+                                            @click="category_select(tag)"
+                                        >
+                                            {{ tag }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -68,16 +101,29 @@
             <!-- Playlist -->
             <div class="w-full lg:w-1/3 overflow-y-auto bg-white border-l" style="height: calc(100vh - 4rem);">
                 <div 
-                    v-for="(song, index) in playlist"
-                    :key="index"
-                    class="p-2 border-b cursor-pointer hover:bg-gray-100"
-                    :class="{'bg-blue-200': index === pointer}"
-                    @click="select(index)">
-                    <h3 class="text-sm font-bold">{{index + 1}} {{ song.title }}</h3>
-                    <p class="text-xs text-gray-500">{{ song.artist }}</p>
-                    <span class="text-xs text-gray-400">{{ song.duration }}</span>
+                v-for="(song, index) in playlist"
+                :key="index"
+                class="p-2 border-b cursor-pointer hover:bg-gray-100 relative"
+                :class="{'bg-blue-200': index === pointer}"
+                @click="select(index)" 
+                >
+                <h3 class="text-sm font-bold">{{index + 1}} {{ song.title }}</h3>
+                <p class="text-xs text-gray-500">{{ song.artist }}</p>
+                <span class="text-xs text-gray-400">{{ song.duration }} （{{song.yyyy_mm_dd}}）</span>
+            
+                <!-- ブックマークボタンを右上などに配置する例 -->
+                <button 
+                    class="absolute right-2 top-2 p-1 hover:bg-gray-200 rounded"
+                    @click.stop="toggle_bookmark_for_item(index)" 
+                >
+                    <img 
+                    :src="song.bookmarked == 1 ? 'image/bookmark_remove_00334e.svg' : 'image/bookmark_add.svg'" 
+                    class="h-4 w-4"
+                    >
+                </button>
                 </div>
             </div>
+  
         </div>
             
     </div>
