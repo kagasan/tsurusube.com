@@ -93,6 +93,32 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- 検索ボタンと検索入力欄 -->
+                            <div class="relative inline-block mt-2">
+                                <button 
+                                    ref="searchButton"
+                                    class="p-2 bg-gray-300 rounded-full hover:bg-gray-400"
+                                    @click.stop="toggle_search_input"
+                                >
+                                    <img src="image/search.svg" alt="Search" />
+                                </button>
+
+                                <div 
+                                    ref="searchInput"
+                                    v-if="show_search_input"
+                                    class="absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 p-2 flex gap-2"
+                                >
+                                    <input 
+                                        v-model="searchQuery"
+                                        type="text" 
+                                        class="border p-1 rounded w-32"
+                                        placeholder="検索..."
+                                        @keyup.enter="performSearch"
+                                    />
+                                    <button class="p-1 text-white rounded" style="background-color: #00334E;" @click="performSearch">検索</button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>

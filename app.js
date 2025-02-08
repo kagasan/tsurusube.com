@@ -146,6 +146,8 @@ window.onload = () => {
                 play_state: false,
                 tags: ['bookmark'],
                 show_category_list: false,
+                show_search_input: false,
+                searchQuery: "",
             };
         },
         mounted() {
@@ -248,27 +250,28 @@ window.onload = () => {
             toggle_category_list() {
                 // カテゴリリストの表示・非表示
                 this.show_category_list = !this.show_category_list;
+                if (this.show_search_input) this.show_search_input = false; // カテゴリリストを開くときに検索欄を閉じる
             },
 
             handleClickOutside(event) {
-                // メニューが表示されていなければ何もしない
-                if (!this.show_category_list) return;
-          
-                // クリック先がカテゴリボタンあるいはカテゴリメニューを含まないなら閉じる
-                const buttonEl = this.$refs.categoryButton;
-                const menuEl = this.$refs.categoryMenu;
-          
-                // DOM要素がなければ処理を中断（念のため）
-                if (!buttonEl || !menuEl) return;
-          
-                // contains() で「クリック先がその要素内かどうか」を判定
-                if (
-                  !buttonEl.contains(event.target) &&
-                  !menuEl.contains(event.target)
-                ) {
-                  this.show_category_list = false;
+                // カテゴリリストを閉じる処理
+                if (this.show_category_list) {
+                    const buttonEl = this.$refs.categoryButton;
+                    const menuEl = this.$refs.categoryMenu;
+                    if (buttonEl && menuEl && !buttonEl.contains(event.target) && !menuEl.contains(event.target)) {
+                        this.show_category_list = false;
+                    }
                 }
-              },
+
+                // 検索入力欄を閉じる処理
+                if (this.show_search_input) {
+                    const searchButtonEl = this.$refs.searchButton;
+                    const searchInputEl = this.$refs.searchInput;
+                    if (searchButtonEl && searchInputEl && !searchButtonEl.contains(event.target) && !searchInputEl.contains(event.target)) {
+                        this.show_search_input = false;
+                    }
+                }
+            },
 
             category_select(tag) {
                 // ユーザーがカテゴリを選択したときの処理
@@ -292,6 +295,48 @@ window.onload = () => {
                 this.playlist = new_playlist;
                 this.pointer = 0;
                 this.play(true);
+            },
+
+            search(query = "") {
+                if (typeof query !== 'string') query = "";
+                let lowerQuery = query.toLowerCase();
+
+                let count = 0;
+                for (const item of this.originalPlaylist) {
+                    if (
+                        item.title.toLowerCase().includes(lowerQuery) ||
+                        item.artist.toLowerCase().includes(lowerQuery)
+                    ) {
+                        count++;
+                    }
+                }
+                if (count === 0) lowerQuery = '';
+
+                const new_playlist = [];
+                for (const item of this.originalPlaylist) {
+                    if (
+                        item.title.toLowerCase().includes(lowerQuery) ||
+                        item.artist.toLowerCase().includes(lowerQuery)
+                    ) {
+                        new_playlist.push(item);
+                    }
+                }
+                this.playlist = new_playlist;
+                this.pointer = 0;
+                this.play(true);
+            },
+
+            toggle_search_input() {
+                this.show_category_list = false; // 検索欄を開くときにカテゴリリストを閉じる
+                this.show_search_input = !this.show_search_input;
+                if (!this.show_search_input) {
+                    this.searchQuery = ""; // 閉じるときに検索ワードをクリア
+                }
+            },
+
+            performSearch() {
+                this.show_search_input = false; // 検索実行時に検索欄を閉じる
+                this.search(this.searchQuery);
             },
 
             toggle_bookmark_for_item(index=-1) {
