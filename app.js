@@ -42,7 +42,7 @@ function addBookmark(id) {
     const bookmarks = getBookmarks();
     if (!bookmarks.includes(id)) {
         bookmarks.push(id);
-        document.cookie = `bookmarks=${bookmarks.join(',')}`;
+        document.cookie = `bookmarks=${bookmarks.join(',')}; max-age=31536000; path=/;`;
     }
 }
 
@@ -52,7 +52,7 @@ function removeBookmark(id) {
     const index = bookmarks.indexOf(id);
     if (index >= 0) {
         bookmarks.splice(index, 1);
-        document.cookie = `bookmarks=${bookmarks.join(',')}`;
+        document.cookie = `bookmarks=${bookmarks.join(',')}; max-age=31536000; path=/;`;
     }
 }
 
