@@ -158,6 +158,11 @@ window.onload = () => {
             seek(add=0) {
                 yt_player.seekTo(yt_player.getCurrentTime() + add);
             },
+            seek_memo() {
+                let memo_sec = parseInt(this.playlist[this.pointer].memo, 10);
+                if (isNaN(memo_sec)) memo_sec = 0;
+                yt_player.seekTo(formatTime(this.playlist[this.pointer].startsec) + memo_sec - 10);
+            },
             set_start_current() {
                 this.playlist[this.pointer].startsec = Math.ceil(yt_player.getCurrentTime());
             },
