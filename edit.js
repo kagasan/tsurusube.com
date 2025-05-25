@@ -297,6 +297,16 @@ window.onload = () => {
                     }
                 }
                 this.play();
+            },
+            search_title() {
+                // 「{曲名} 歌詞」でgoogle検索を開く
+                const title = this.playlist[this.pointer].title;
+                if (title) {
+                    const url = `https://www.google.com/search?q=${encodeURIComponent(title + ' 歌詞')}`;
+                    window.open(url, '_blank');
+                } else {
+                    alert("曲名が入力されていません。");
+                }
             }
         }
 
