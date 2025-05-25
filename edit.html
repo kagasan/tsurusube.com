@@ -106,7 +106,7 @@
                         <button class="bg-green-500 text-white py-1 px-4 rounded" @click="check_end_sec">終わりを確認</button>
                     </div>
                 </div>
-
+                
                 <!-- Hidden -->
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-1">非表示(1で非表示)</label>
@@ -116,12 +116,13 @@
                         <button class="bg-red-500 text-white py-1 px-4 rounded" @click="change_to_hidden">非表示にする</button>
                     </div>
                 </div>
-
+                
                 <!-- Memo -->
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-1">Memo</label>
                     <div class="flex gap-x-2">
                         <input type="text" class="flex-1 border border-gray-300 rounded-lg p-2" v-model="playlist[pointer].memo">
+                        <button class="bg-green-500 text-white py-1 px-4 rounded" @click="seek_memo">memoの時刻に移動</button>
                     </div>
                 </div>
 
