@@ -1,1 +1,113 @@
-hello
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Timestamp List Converter</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    label {
+      font-weight: bold;
+    }
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      margin-top: 0.25rem;
+    }
+    input[type="url"],
+    input[type="date"] {
+      width: 100%;
+      padding: 0.35rem;
+      margin-top: 0.25rem;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .field {
+      margin-bottom: 1.25rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>タイムスタンプリスト → CSV 変換ツール</h1>
+
+  <!-- ➊ タイムスタンプ + 曲名入力欄 -->
+  <div class="field">
+    <label for="inputArea">タイムスタンプ + 曲名リスト</label><br />
+    <textarea id="inputArea" placeholder="0:00 開始\n4:49 忘れてやらない\n..."></textarea>
+  </div>
+
+  <!-- ➋ YouTube URL 入力欄 -->
+  <div class="field">
+    <label for="urlInput">YouTube URL</label><br />
+    <input type="url" id="urlInput" placeholder="https://www.youtube.com/watch?v=XXXX" />
+  </div>
+
+  <!-- ➌ 日付入力欄 -->
+  <div class="field">
+    <label for="dateInput">日付</label><br />
+    <input type="date" id="dateInput" />
+  </div>
+
+  <!-- ➍ 変換ボタン -->
+  <div class="field">
+    <button id="convertBtn">変換</button>
+  </div>
+
+  <!-- ➎ 出力欄 -->
+  <div class="field">
+    <label for="outputArea">変換結果</label><br />
+    <textarea id="outputArea" readonly></textarea>
+  </div>
+
+  <script>
+    function convert() {
+      const raw = document.getElementById("inputArea").value.trim();
+      const url = document.getElementById("urlInput").value.trim();
+      const dateRaw = document.getElementById("dateInput").value; // YYYY-MM-DD
+      const dateStr = dateRaw ? dateRaw.replace(/-/g, "/") : "";
+
+      const lines = raw.split(/\r?\n/);
+      const outLines = [];
+      const rgx = /^(\d{1,2}:\d{2}(?::\d{2})?)\s+(.+?)$/; // タイムスタンプと曲名を抽出
+
+      lines.forEach((line) => {
+        const clean = line.trim();
+        if (!clean) return; // 空行スキップ
+        const m = clean.match(rgx);
+        if (m) {
+          const [, time, title] = m;
+          outLines.push(`${title},,${url},${time},-1,0,,${dateStr}`);
+        }
+      });
+
+      document.getElementById("outputArea").value = outLines.join("\n");
+    }
+
+    document
+      .getElementById("convertBtn")
+      .addEventListener("click", convert);
+
+    // Ctrl+Enter で変換を発火 (入力欄フォーカス時)
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.key === "Enter") {
+        convert();
+      }
+    });
+  </script>
+</body>
+</html>
