@@ -74,40 +74,93 @@
     <textarea id="outputArea" readonly></textarea>
   </div>
 
-  <script>
-    function convert() {
-      const raw = document.getElementById("inputArea").value.trim();
-      const url = document.getElementById("urlInput").value.trim();
-      const dateRaw = document.getElementById("dateInput").value; // YYYY-MM-DD
-      const dateStr = dateRaw ? dateRaw.replace(/-/g, "/") : "";
+<script>
+/* ─────────────── ① 補助関数 ──────────────── */
+function parseTime(str) {
+  if (!str) return null;
+  const p = str.trim().split(":").map(Number);
+  if (p.some(isNaN)) return null;
+  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]; // h:m:s
+  if (p.length === 2) return p[0] * 60   + p[1];             // m:s
+  return p[0];                                               // s
+}
 
-      const lines = raw.split(/\r?\n/);
-      const outLines = [];
-      const rgx = /^(\d{1,2}:\d{2}(?::\d{2})?)\s+(.+?)$/; // タイムスタンプと曲名を抽出
+/* ─────────────── ② 参照 CSV を読む ──────────────── */
+let referenceMap = null;   // title → { artist, lenSec }
 
-      lines.forEach((line) => {
-        const clean = line.trim();
-        if (!clean) return; // 空行スキップ
-        const m = clean.match(rgx);
-        if (m) {
-          const [, time, title] = m;
-          outLines.push(`${title},,${url},${time},-1,0,,${dateStr}`);
-        }
+async function loadReference() {
+  if (referenceMap) return referenceMap;        // キャッシュ
+
+  referenceMap = new Map();
+  try {
+    const res  = await fetch(
+      "https://raw.githubusercontent.com/kagasan/tsurusube.com/refs/heads/main/playlist.csv"
+    );
+    const text = await res.text();
+
+    text.split(/\r?\n/).forEach((line, idx) => {
+      if (!line.trim()) return;                 // 空行
+      const cols = line.split(",");
+
+      /* ヘッダー行(タイトル,アーティスト,…)をスキップ */
+      if (idx === 0 && cols[0] === "タイトル") return;
+
+      const [title, artist = "", _url, startRaw, endRaw] = cols;
+      if (!title) return;
+
+      const start = parseTime(startRaw);
+      const end   = parseTime(endRaw);
+      const lenSec =
+        Number.isFinite(start) && Number.isFinite(end) && end > start
+          ? end - start
+          : null;
+
+      referenceMap.set(title.trim(), {
+        artist: artist.trim(),
+        lenSec
       });
-
-      document.getElementById("outputArea").value = outLines.join("\n");
-    }
-
-    document
-      .getElementById("convertBtn")
-      .addEventListener("click", convert);
-
-    // Ctrl+Enter で変換を発火 (入力欄フォーカス時)
-    document.addEventListener("keydown", (e) => {
-      if (e.ctrlKey && e.key === "Enter") {
-        convert();
-      }
     });
-  </script>
+  } catch (e) {
+    console.warn("playlist.csv の取得に失敗:", e);
+  }
+  return referenceMap;
+}
+
+/* ─────────────── ③ 変換処理 ──────────────── */
+async function convert() {
+  const ref    = await loadReference();
+  const input  = document.getElementById("inputArea").value.trim();
+  const url    = document.getElementById("urlInput").value.trim();
+  const dateIn = document.getElementById("dateInput").value;  // YYYY-MM-DD
+  const date   = dateIn ? dateIn.replace(/-/g, "/") : "";
+
+  const rgx = /^(\d{1,2}:\d{2}(?::\d{2})?)\s+(.+)$/;          // ts + title
+  const out = [];
+
+  input.split(/\r?\n/).forEach((line) => {
+    const m = line.trim().match(rgx);
+    if (!m) return;
+    const [, ts, title] = m;
+
+    const refData = ref.get(title) || {};
+    const artist  = refData.artist  || "";
+    const memo    = Number.isFinite(refData.lenSec) ? refData.lenSec : "";
+
+    /* title,artist,url,time,-1,0, memo ,date */
+    out.push(`${title},${artist},${url},${ts},-1,0,${memo},${date}`);
+  });
+
+  document.getElementById("outputArea").value = out.join("\n");
+}
+
+/* ─────────────── ④ イベント紐付け ──────────────── */
+document.getElementById("convertBtn").addEventListener("click", convert);
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key === "Enter") convert();
+});
+</script>
+
+
+
 </body>
 </html>
